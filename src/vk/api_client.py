@@ -1,5 +1,6 @@
 import json
 import requests
+from pprint import pprint
 
 
 class VKApiClient:
@@ -12,7 +13,7 @@ class VKApiClient:
     '''
 
     __BASE_QUERY = \
-        'https://api.vk.com/{method}/{submethod}?{params}&access_token={token}&v={version}'
+        'https://api.vk.com/method/{method}.{submethod}?{params}&access_token={token}&v={version}'
     __API_VERSION = '5.131'
 
     def __init__(self, vk_token, logger):
@@ -38,9 +39,15 @@ class VKApiClient:
     def get(self, query):
         resposne = requests.get(query)
         status = response.status_code
-        if response.status != 200:
+        if status != 200:
+            # TODO: add logging
+            exp_msg = 'Bad response status!'
+            status_msg = f'status: {status}'
+            query_msg = f'query: {query}'
+            msg = '\n'.join([exp_msg, status_msg, query_msg])
+            raise Exception(msg)
+        else:
             pass
-            # exception_msg =    
         data = response.json()
 
 
@@ -49,5 +56,17 @@ if __name__ == '__main__':
     with open(cfg_path, 'r') as cfg_file:
         cfg = json.load(cfg_file)
     
-    print(cfg)
-        
+    logger = None
+    vk_token = cfg['vk_token']
+
+    vk_api_client = VKApiClient(vk_token, logger)   
+    
+    method = 'wall'
+    submethod = 'get'
+    params = 'owner_id=-86529522'
+    query = vk_api_client.create_query(method, submethod, params)
+    response = requests.get(query)
+    print(response.status_code)
+    # print(list(response.json().keys()))
+    pprint(list(response.json()['response'].keys()))
+    # pprint(response.json())
